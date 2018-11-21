@@ -31,6 +31,8 @@ static void build_chunk_display_list(struct Chunk *chunk);
 #define LAND_HEIGHT_MAX 67
 #define STONE_LEVEL 53
 #define SAND_LEVEL 56
+#define WATER_LEVEL 55
+#define BEDROCK_LEVEL 1
 #define MAX_TREES 4
 
 //Returns a pseudo-random number between 0 and 65535 with a 16-bit input
@@ -89,9 +91,6 @@ static void generate_land(struct Chunk *chunk)
     unsigned int x = chunk->x * CHUNK_WIDTH;
     unsigned int z = chunk->z * CHUNK_WIDTH;
     u16 randVal = 65535.0 * rand_hash_frac(x, z);
-    int gameCubeX;
-    int gameCubeY;
-    int gameCubeZ;
     int y;
     
     //Calculate land height
@@ -122,7 +121,9 @@ static void generate_land(struct Chunk *chunk)
             assert(landHeight <= LAND_HEIGHT_MAX);
             for (y = 0; y < landHeight; y++)
             {
-                if (y < STONE_LEVEL)
+				if (y == BEDROCK_LEVEL)
+					chunk->blocks[x][y][z] = BLOCK_BEDROCK;
+                else if (y < STONE_LEVEL)
                     chunk->blocks[x][y][z] = BLOCK_STONE;
                 else if (y < SAND_LEVEL)
                     chunk->blocks[x][y][z] = BLOCK_SAND;
@@ -131,8 +132,11 @@ static void generate_land(struct Chunk *chunk)
                 else
                     chunk->blocks[x][y][z] = BLOCK_DIRT;
             }
-            for (; y < CHUNK_HEIGHT; y++)
-                chunk->blocks[x][y][z] = BLOCK_AIR;
+			for (; y < CHUNK_HEIGHT; y++)
+				if (y < WATER_LEVEL)
+					chunk->blocks[x][y][z] = BLOCK_WATER;
+				else
+					chunk->blocks[x][y][z] = BLOCK_AIR;
         }
     }
     
@@ -151,22 +155,6 @@ static void generate_land(struct Chunk *chunk)
             make_tree(chunk, x, y, z);
     }
     
-    //Bury one secret Gamecube in each chunk
-    randVal = prand(randVal);
-    gameCubeX = randVal % CHUNK_WIDTH;
-    randVal = prand(randVal);
-    gameCubeY = randVal;
-    randVal = prand(randVal);
-    gameCubeZ = randVal % CHUNK_WIDTH;
-    gameCubeY %= heightmap[gameCubeX][gameCubeZ] - 1;
-    assert(gameCubeX >= 0);
-    assert(gameCubeX < CHUNK_WIDTH);
-    assert(gameCubeZ >= 0);
-    assert(gameCubeZ < CHUNK_WIDTH);
-    assert(gameCubeY >= 0);
-    assert(gameCubeY < CHUNK_HEIGHT);
-    assert(heightmap[gameCubeX][gameCubeZ] > 0);
-    chunk->blocks[gameCubeX][gameCubeY][gameCubeZ] = BLOCK_GAMECUBE;
 }
 
 //==================================================
@@ -413,12 +401,8 @@ void world_set_block(int x, int y, int z, int type)
     TILE_TREE_SIDE,
     TILE_TREE_TOP,
     TILE_LEAVES,
-    TILE_GC_FRONT,
-    TILE_GC_TOP,
-    TILE_GC_SIDE,
-    TILE_GC_BACK,
-    TILE_GC_BOTTOM,
-    NUM_TILES,
+    TILE_WATER,
+	TILE_BEDROCK,
 };
 
 enum
@@ -440,7 +424,8 @@ static const u8 blockTiles[][6] =
     [BLOCK_WOOD]      = {TILE_WOOD,       TILE_WOOD,       TILE_WOOD,     TILE_WOOD,      TILE_WOOD,       TILE_WOOD},
     [BLOCK_TREE]      = {TILE_TREE_SIDE,  TILE_TREE_SIDE,  TILE_TREE_TOP, TILE_TREE_TOP,  TILE_TREE_SIDE,  TILE_TREE_SIDE},
     [BLOCK_LEAVES]    = {TILE_LEAVES,     TILE_LEAVES,     TILE_LEAVES,   TILE_LEAVES,    TILE_LEAVES,     TILE_LEAVES},
-    [BLOCK_GAMECUBE]  = {TILE_GC_SIDE,    TILE_GC_SIDE,    TILE_GC_TOP,   TILE_GC_BOTTOM, TILE_GC_FRONT,   TILE_GC_BACK}
+    [BLOCK_WATER]	  = {TILE_WATER,    TILE_WATER,    TILE_WATER,   TILE_WATER, TILE_WATER,   TILE_WATER},
+	[BLOCK_BEDROCK]	  = {TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK},
 };
 
 static const u8 cubeFaces[6][4][3] = 
@@ -551,6 +536,9 @@ static void build_exposed_faces_list(struct Chunk *chunk)
                         add_face(x, y, z, DIR_Y_FRONT, chunk->blocks[x][y - 1][z]);
                     if (BLOCK_IS_SOLID(prevBlockZ))
                         add_face(x, y, z, DIR_Z_FRONT, prevBlockZ);
+					if (currBlock == BLOCK_WATER && world_get_block_at(x, y + 1, z) == BLOCK_AIR)
+						add_face(x, y + 1, z, DIR_Y_FRONT, currBlock);
+						//add_face(x, y + 2, z, DIR_Y_BACK, currBlock);
                 }
             }
         }

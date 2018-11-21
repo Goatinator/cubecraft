@@ -24,7 +24,8 @@ enum
     ICON_WOOD,
     ICON_TREE,
     ICON_LEAVES,
-    ICON_GAMECUBE
+    ICON_WATER,
+	ICON_BEDROCK,
 };
 
 int inventorySelection;
@@ -40,7 +41,8 @@ static const u8 itemIconTable[] =
     [BLOCK_WOOD] = ICON_WOOD,
     [BLOCK_TREE] = ICON_TREE,
     [BLOCK_LEAVES] = ICON_LEAVES,
-    [BLOCK_GAMECUBE] = ICON_GAMECUBE
+    [BLOCK_WATER] = ICON_WATER,
+	[BLOCK_BEDROCK] = ICON_BEDROCK,
 };
 
 static int get_nonempty_slots_count(void)
@@ -123,7 +125,7 @@ void inventory_add_block(int type)
     for (int i = 0; i < NUM_ITEM_SLOTS; i++)
     {
         if (gSaveFile.inventory[i].type == type
-         && gSaveFile.inventory[i].count > 0 && gSaveFile.inventory[i].count < 99)
+         && gSaveFile.inventory[i].count > 0 && gSaveFile.inventory[i].count < 64)
         {
             gSaveFile.inventory[i].count++;
             return;

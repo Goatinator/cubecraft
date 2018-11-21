@@ -489,12 +489,16 @@ static void field_main(void)
     
     if (gControllerPressedKeys & PAD_BUTTON_B)
     {
-        if (selectedBlockActive)
+		int block = world_get_block_at(selectedBlockPos.x, selectedBlockPos.y, selectedBlockPos.z);
+        if (selectedBlockActive && block != BLOCK_BEDROCK)
         {
-            int block = world_get_block_at(selectedBlockPos.x, selectedBlockPos.y, selectedBlockPos.z);
-            
             world_set_block(selectedBlockPos.x, selectedBlockPos.y, selectedBlockPos.z, BLOCK_AIR);
-            inventory_add_block(block);
+			if (block == BLOCK_GRASS)
+				inventory_add_block(BLOCK_DIRT);
+			else if (block == BLOCK_TREE)
+				inventory_add_block(BLOCK_WOOD);
+			else
+				inventory_add_block(block);
         }
     }
     else if (gControllerPressedKeys & PAD_BUTTON_Y)

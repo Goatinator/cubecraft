@@ -108,6 +108,7 @@ static void draw_version_copyright(void)
     text_set_font_size(8, 16);
     text_draw_string(gDisplayWidth / 2, 400, TEXT_HCENTER, "Version "VERSION);
     text_draw_string(gDisplayWidth / 2, 416, TEXT_HCENTER, "Copyright (C) 2016 Cameron Hall (camthesaxman)");
+	text_draw_string(gDisplayWidth / 2, 432, TEXT_HCENTER, "Forked by Goatinator");
 }
 
 static void draw_title_background(void)
@@ -205,7 +206,7 @@ static char seedKeyboardBuffer[SEED_MAX];
 
 static bool check_if_already_exists(const char *name)
 {
-    if (!stricmp(name, nameKeyboardBuffer))
+    if (!strcmp(name, nameKeyboardBuffer))
     {
         menu_msgbox_init("File already exists.");
         return false;
