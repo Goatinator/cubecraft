@@ -7,7 +7,6 @@
 enum
 {
 	BLOCK_AIR,
-	BLOCK_WATER,
 	BLOCK_STONE,
 	BLOCK_SAND,
 	BLOCK_DIRT,
@@ -15,11 +14,12 @@ enum
 	BLOCK_WOOD,
     BLOCK_TREE,
     BLOCK_LEAVES,
-    BLOCK_GAMECUBE,
+    BLOCK_WATER,
+	BLOCK_BEDROCK,
 };
 
 #define BLOCK_IS_SOLID(b)   ((b) != BLOCK_AIR && (b) != BLOCK_WATER)
-
+//&& (b) != BLOCK_WATER
 struct Chunk
 {
     bool active;
