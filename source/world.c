@@ -32,7 +32,7 @@ static void build_chunk_display_list(struct Chunk *chunk);
 #define STONE_LEVEL 53
 #define SAND_LEVEL 56
 #define WATER_LEVEL 55
-#define BEDROCK_LEVEL 1
+#define BEDROCK_LEVEL 0
 #define MAX_TREES 4
 
 //Returns a pseudo-random number between 0 and 65535 with a 16-bit input
