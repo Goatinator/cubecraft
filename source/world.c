@@ -27,8 +27,8 @@ static void build_chunk_display_list(struct Chunk *chunk);
 //==================================================
 
 #define WAVELENGTH 32
-#define LAND_HEIGHT_MIN 51
-#define LAND_HEIGHT_MAX 67
+#define LAND_HEIGHT_MIN 48
+#define LAND_HEIGHT_MAX 96
 #define STONE_LEVEL 53
 #define SAND_LEVEL 56
 #define WATER_LEVEL 55
@@ -47,7 +47,7 @@ static u16 prand(u16 a)
 static float rand_hash_frac(int a, int b)
 {
     u16 hash = prand(a) ^ prand(b);
-    
+
     return (float)hash / 65535.0;
 }
 
@@ -59,7 +59,7 @@ static float lerp(float a, float b, float x)
 static void make_tree(struct Chunk *chunk, int x, int y, int z)
 {
     int i, j;
-    
+
     for (i = -1; i <= 1; i++)
     {
         for (j = -1; j <= 1; j++)
@@ -82,7 +82,7 @@ static void make_tree(struct Chunk *chunk, int x, int y, int z)
     }
     for (int i = 0; i < 4; i++)
         chunk->blocks[x][y++][z] = BLOCK_TREE;
-    
+
 }
 
 static void generate_land(struct Chunk *chunk)
@@ -92,7 +92,7 @@ static void generate_land(struct Chunk *chunk)
     unsigned int z = chunk->z * CHUNK_WIDTH;
     u16 randVal = 65535.0 * rand_hash_frac(x, z);
     int y;
-    
+
     //Calculate land height
     for (int i = 0; i < CHUNK_WIDTH; i++)
     {
@@ -109,14 +109,14 @@ static void generate_land(struct Chunk *chunk)
             heightmap[i][j] = LAND_HEIGHT_MIN + (float)(LAND_HEIGHT_MAX - LAND_HEIGHT_MIN) * lerp(a, b, zBlend);
         }
     }
-    
+
     //Add terrain
     for (x = 0; x < CHUNK_WIDTH; x++)
     {
         for (z = 0; z < CHUNK_WIDTH; z++)
         {
             int landHeight = heightmap[x][z];
-            
+
             assert(landHeight >= LAND_HEIGHT_MIN);
             assert(landHeight <= LAND_HEIGHT_MAX);
             for (y = 0; y < landHeight; y++)
@@ -139,7 +139,7 @@ static void generate_land(struct Chunk *chunk)
 					chunk->blocks[x][y][z] = BLOCK_AIR;
         }
     }
-    
+
     //Add trees
     for (int i = 0; i < MAX_TREES; i++)
     {
@@ -149,12 +149,12 @@ static void generate_land(struct Chunk *chunk)
         randVal = prand(randVal);
         z = 2 + (randVal % (CHUNK_WIDTH - 4));
         y = heightmap[x][z];
-       
+
         //Trees should only grow on grass
         if (chunk->blocks[x][y - 1][z] == BLOCK_GRASS)
             make_tree(chunk, x, y, z);
     }
-    
+
 }
 
 //==================================================
@@ -172,9 +172,9 @@ static int wrap_table_index(int index)
 static void load_chunk_changes(struct Chunk *chunk)
 {
     struct ChunkModification *mod;
-    
+
     chunk->modificationIndex = -1;
-    
+
     //Search the save file for modifications to this chunk
     for (int i = 0; i < gSaveFile.modifiedChunksCount; i++)
     {
@@ -185,16 +185,16 @@ static void load_chunk_changes(struct Chunk *chunk)
             break;
         }
     }
-    
+
     if (chunk->modificationIndex == -1)
         return;  //Chunk was not modified
-    
+
     file_log("load_chunk_changes(): applying chunk changes for chunk %i, %i", chunk->x, chunk->z);
     mod = &gSaveFile.modifiedChunks[chunk->modificationIndex];
     for (int i = 0; i < mod->modifiedBlocksCount; i++)
     {
         struct BlockModification *blockMod = &mod->modifiedBlocks[i];
-        
+
         assert(blockMod->x >= 0);
         assert(blockMod->x < CHUNK_WIDTH);
         assert(blockMod->y >= 0);
@@ -224,7 +224,7 @@ static void delete_chunk(struct Chunk *chunk)
 struct Chunk *world_get_chunk(int x, int z)
 {
     struct Chunk *chunk = &chunkTable[wrap_table_index(x)][wrap_table_index(z)];
-    
+
     if (chunk->active)
     {
         if (chunk->x == x && chunk->z == z)
@@ -240,14 +240,14 @@ struct Chunk *world_get_chunk_containing(float x, float z)
 {
     int chunkX = floorf(x / CHUNK_WIDTH);
     int chunkZ = floorf(z / CHUNK_WIDTH);
-    
+
     return world_get_chunk(chunkX, chunkZ);
 }
 
 int world_to_chunk_coord(float x)
 {
     int ret = floorf(x / CHUNK_WIDTH);
-    
+
     assert(x >= (float)ret * CHUNK_WIDTH);
     assert(x < (float)ret * CHUNK_WIDTH + CHUNK_WIDTH);
     return ret;
@@ -256,7 +256,7 @@ int world_to_chunk_coord(float x)
 int world_to_block_coord(float x)
 {
     int ret = (unsigned int)floorf(x) % CHUNK_WIDTH;
-    
+
     assert(ret >= 0);
     assert(ret < CHUNK_WIDTH);
     return ret;
@@ -268,7 +268,7 @@ int world_get_block_at(float x, float y, float z)
     int blockX = world_to_block_coord(x);
     int blockY = floorf(y);
     int blockZ = world_to_block_coord(z);
-    
+
     assert(blockX >= 0);
     assert(blockX < CHUNK_WIDTH);
     assert(blockY >= 0);
@@ -282,7 +282,7 @@ static void add_block_modification(struct Chunk *chunk, int x, int y, int z, int
 {
     int i;
     struct ChunkModification *mod;
-    
+
     //Ensure this chunk is in the list
     for (i = 0; i < gSaveFile.modifiedChunksCount; i++)
     {
@@ -290,7 +290,7 @@ static void add_block_modification(struct Chunk *chunk, int x, int y, int z, int
          && gSaveFile.modifiedChunks[i].z == chunk->z)
             break;
     }
-    
+
     if (i == gSaveFile.modifiedChunksCount)
     {
         //Doesn't exist. Let's create it
@@ -304,11 +304,11 @@ static void add_block_modification(struct Chunk *chunk, int x, int y, int z, int
         gSaveFile.modifiedChunks[i].modifiedBlocksCount = 0;
         gSaveFile.modifiedChunksCount++;
     }
-    
+
     //Add the block modification
     assert(chunk->modificationIndex != -1);
     mod = &gSaveFile.modifiedChunks[chunk->modificationIndex];
-    
+
     mod->modifiedBlocks = realloc(mod->modifiedBlocks, (mod->modifiedBlocksCount + 1) * sizeof(struct BlockModification));
     mod->modifiedBlocks[mod->modifiedBlocksCount].x = x;
     mod->modifiedBlocks[mod->modifiedBlocksCount].y = y;
@@ -323,41 +323,41 @@ void world_set_block(int x, int y, int z, int type)
     int blockX = world_to_block_coord(x);
     int blockY = y;
     int blockZ = world_to_block_coord(z);
-    
+
     chunk->blocks[blockX][blockY][blockZ] = type;
     free(chunk->dispList);
     build_chunk_display_list(chunk);
-    
+
     //Patch up any leftover or newly exposed faces on chunk borders
     if (blockX == 0)
     {
         struct Chunk *neighborChunk = world_get_chunk(chunk->x - 1, chunk->z);
-        
+
         free(neighborChunk->dispList);
         build_chunk_display_list(neighborChunk);
     }
     else if (blockX == CHUNK_WIDTH - 1)
     {
         struct Chunk *neighborChunk = world_get_chunk(chunk->x + 1, chunk->z);
-        
+
         free(neighborChunk->dispList);
         build_chunk_display_list(neighborChunk);
     }
     if (blockZ == 0)
     {
         struct Chunk *neighborChunk = world_get_chunk(chunk->x, chunk->z - 1);
-        
+
         free(neighborChunk->dispList);
         build_chunk_display_list(neighborChunk);
     }
     else if (blockZ == CHUNK_WIDTH - 1)
     {
         struct Chunk *neighborChunk = world_get_chunk(chunk->x, chunk->z + 1);
-        
+
         free(neighborChunk->dispList);
         build_chunk_display_list(neighborChunk);
     }
-    
+
     add_block_modification(chunk, blockX, blockY, blockZ, type);
 }
 
@@ -393,7 +393,9 @@ void world_set_block(int x, int y, int z, int type)
  enum
 {
     TILE_STONE,
+    TILE_COBBLESTONE,
     TILE_SAND,
+    TILE_SANDSTONE,
     TILE_DIRT,
     TILE_GRASS_SIDE,
     TILE_GRASS,
@@ -402,7 +404,12 @@ void world_set_block(int x, int y, int z, int type)
     TILE_TREE_TOP,
     TILE_LEAVES,
     TILE_WATER,
+    TILE_LAVA,
 	TILE_BEDROCK,
+	TILE_CLAY,
+	TILE_BRICKS,
+	TILE_CRAFT_SIDE,
+	TILE_CRAFT_TOP,
 };
 
 enum
@@ -417,18 +424,24 @@ enum
 
 static const u8 blockTiles[][6] =
 {
-    [BLOCK_STONE]     = {TILE_STONE,      TILE_STONE,      TILE_STONE,    TILE_STONE,     TILE_STONE,      TILE_STONE},
-    [BLOCK_SAND]      = {TILE_SAND,       TILE_SAND,       TILE_SAND,     TILE_SAND,      TILE_SAND,       TILE_SAND},
-    [BLOCK_DIRT]      = {TILE_DIRT,       TILE_DIRT,       TILE_DIRT,     TILE_DIRT,      TILE_DIRT,       TILE_DIRT},
-    [BLOCK_GRASS]     = {TILE_GRASS_SIDE, TILE_GRASS_SIDE, TILE_GRASS,    TILE_DIRT,      TILE_GRASS_SIDE, TILE_GRASS_SIDE},
-    [BLOCK_WOOD]      = {TILE_WOOD,       TILE_WOOD,       TILE_WOOD,     TILE_WOOD,      TILE_WOOD,       TILE_WOOD},
-    [BLOCK_TREE]      = {TILE_TREE_SIDE,  TILE_TREE_SIDE,  TILE_TREE_TOP, TILE_TREE_TOP,  TILE_TREE_SIDE,  TILE_TREE_SIDE},
-    [BLOCK_LEAVES]    = {TILE_LEAVES,     TILE_LEAVES,     TILE_LEAVES,   TILE_LEAVES,    TILE_LEAVES,     TILE_LEAVES},
-    [BLOCK_WATER]	  = {TILE_WATER,    TILE_WATER,    TILE_WATER,   TILE_WATER, TILE_WATER,   TILE_WATER},
-	[BLOCK_BEDROCK]	  = {TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK, TILE_BEDROCK},
+    [BLOCK_STONE]       = {TILE_STONE,      TILE_STONE,      TILE_STONE,    TILE_STONE,     TILE_STONE,      TILE_STONE},
+    [BLOCK_COBBLESTONE] = {TILE_COBBLESTONE,    TILE_COBBLESTONE,   TILE_COBBLESTONE, TILE_COBBLESTONE,    TILE_COBBLESTONE,   TILE_COBBLESTONE},
+    [BLOCK_SAND]        = {TILE_SAND,       TILE_SAND,       TILE_SAND,     TILE_SAND,      TILE_SAND,       TILE_SAND},
+    [BLOCK_SANDSTONE]   = {TILE_SANDSTONE,  TILE_SANDSTONE,  TILE_SANDSTONE,  TILE_SANDSTONE,  TILE_SANDSTONE,  TILE_SANDSTONE},
+    [BLOCK_DIRT]        = {TILE_DIRT,       TILE_DIRT,       TILE_DIRT,     TILE_DIRT,      TILE_DIRT,       TILE_DIRT},
+    [BLOCK_GRASS]       = {TILE_GRASS_SIDE, TILE_GRASS_SIDE, TILE_GRASS,    TILE_DIRT,      TILE_GRASS_SIDE, TILE_GRASS_SIDE},
+    [BLOCK_WOOD]        = {TILE_WOOD,       TILE_WOOD,       TILE_WOOD,     TILE_WOOD,      TILE_WOOD,       TILE_WOOD},
+    [BLOCK_TREE]        = {TILE_TREE_SIDE,  TILE_TREE_SIDE,  TILE_TREE_TOP, TILE_TREE_TOP,  TILE_TREE_SIDE,  TILE_TREE_SIDE},
+    [BLOCK_LEAVES]      = {TILE_LEAVES,     TILE_LEAVES,     TILE_LEAVES,   TILE_LEAVES,    TILE_LEAVES,     TILE_LEAVES},
+    [BLOCK_WATER]	    = {TILE_WATER,    TILE_WATER,    TILE_WATER,   TILE_WATER, TILE_WATER,   TILE_WATER},
+    [BLOCK_LAVA]        = {TILE_LAVA,   TILE_LAVA,   TILE_LAVA,   TILE_LAVA,   TILE_LAVA,   TILE_LAVA},
+    [BLOCK_BEDROCK]	    = {TILE_BEDROCK,    TILE_BEDROCK,   TILE_BEDROCK,   TILE_BEDROCK,   TILE_BEDROCK,   TILE_BEDROCK},
+    [BLOCK_CLAY]        = {TILE_CLAY,   TILE_CLAY,   TILE_CLAY,   TILE_CLAY,   TILE_CLAY,   TILE_CLAY},
+    [BLOCK_BRICKS]      = {TILE_BRICKS, TILE_BRICKS, TILE_BRICKS, TILE_BRICKS, TILE_BRICKS, TILE_BRICKS},
+    [BLOCK_CRAFT]       = {TILE_CRAFT_SIDE, TILE_CRAFT_SIDE,    TILE_CRAFT_TOP, TILE_WOOD,  TILE_CRAFT_SIDE, TILE_CRAFT_SIDE},
 };
 
-static const u8 cubeFaces[6][4][3] = 
+static const u8 cubeFaces[6][4][3] =
 {
     [DIR_X_FRONT] = {{0, 1, 1}, {0, 1, 0}, {0, 0, 0}, {0, 0, 1}},  //drawn clockwise looking x-
     [DIR_X_BACK]  = {{0, 1, 0}, {0, 1, 1}, {0, 0, 1}, {0, 0, 0}},  //drawn clockwise looking x+
@@ -458,38 +471,38 @@ static int facesListCapacity;
 static void add_face(int x, int y, int z, int direction, int block)
 {
     struct Face face;
-    
+
     face.position.x = x;
     face.position.y = y;
     face.position.z = z;
     face.direction = direction;
     face.tile = blockTiles[block][direction];
-    
+
     //compute lighting
     switch (direction)
     {
         case DIR_X_FRONT:
-            face.light = 13;
+            face.light = 11;
             break;
         case DIR_X_BACK:
-            face.light = 9;
+            face.light = 11;
             break;
         case DIR_Y_FRONT:
-            face.light = 15;
+            face.light = 14;
             break;
         case DIR_Y_BACK:
-            face.light = 5;
+            face.light = 6;
             break;
         case DIR_Z_FRONT:
             face.light = 11;
             break;
         case DIR_Z_BACK:
-            face.light = 7;
+            face.light = 11;
             break;
         default:
             assert(false);  //bad direction parameter
     }
-    
+
     //add it to the list
     if (facesListCount == facesListCapacity)
     {
@@ -507,7 +520,7 @@ static void build_exposed_faces_list(struct Chunk *chunk)
     facesListCapacity = 0;
     struct Chunk *prevChunkX = world_get_chunk(chunk->x - 1, chunk->z);
     struct Chunk *prevChunkZ = world_get_chunk(chunk->x, chunk->z - 1);
-    
+
     //For each block, add the face of the block preceding it in the x, y, and z directions, if visible
     for (int x = 0; x < CHUNK_WIDTH; x++)
     {
@@ -518,7 +531,7 @@ static void build_exposed_faces_list(struct Chunk *chunk)
                 int currBlock = chunk->blocks[x][y][z];
                 int prevBlockX = (x == 0) ? prevChunkX->blocks[CHUNK_WIDTH - 1][y][z] : chunk->blocks[x - 1][y][z];
                 int prevBlockZ = (z == 0) ? prevChunkZ->blocks[x][y][CHUNK_WIDTH - 1] : chunk->blocks[x][y][z - 1];
-                
+
                 if (BLOCK_IS_SOLID(currBlock))
                 {
                     if (!BLOCK_IS_SOLID(prevBlockX))
@@ -536,9 +549,10 @@ static void build_exposed_faces_list(struct Chunk *chunk)
                         add_face(x, y, z, DIR_Y_FRONT, chunk->blocks[x][y - 1][z]);
                     if (BLOCK_IS_SOLID(prevBlockZ))
                         add_face(x, y, z, DIR_Z_FRONT, prevBlockZ);
-					if (currBlock == BLOCK_WATER && world_get_block_at(x, y + 1, z) == BLOCK_AIR)
+					if (BLOCK_IS_LIQUID(currBlock) && world_get_block_at(x, y + 1, z) == BLOCK_AIR)
 						add_face(x, y + 1, z, DIR_Y_FRONT, currBlock);
-						//add_face(x, y + 2, z, DIR_Y_BACK, currBlock);
+					if (BLOCK_IS_LIQUID(currBlock) && !BLOCK_IS_LIQUID(world_get_block_at(x, y + 1, z)))
+						add_face(x, y + 1, z, DIR_Y_BACK, currBlock);
                 }
             }
         }
@@ -562,9 +576,9 @@ static void build_chunk_display_list(struct Chunk *chunk)
     size_t listSize;
     int x = chunk->x * CHUNK_WIDTH;
     int z = chunk->z * CHUNK_WIDTH;
-    
+
     build_exposed_faces_list(chunk);
-    
+
     //The GX_DRAW_QUADS command takes up 3 bytes.
     //Each face is a quad with 4 vertexes.
     //Each vertex takes up three u16 for the position coordinate, one u8 for the color index, and two u16 for the texture coordinate.
@@ -572,18 +586,18 @@ static void build_chunk_display_list(struct Chunk *chunk)
     listSize = 3 + facesListCount * 4 * (3 * sizeof(s16) + sizeof(u8) + 2 * sizeof(u16)) + 63;
     //The list size also must be a multiple of 32, so round up to the next multiple of 32.
     listSize = round_up(listSize, 32);
-    
+
     chunk->dispList = memalign(32, listSize);
     //Remove this block of memory from the CPU's cache because the write gather pipe is used to write the commands
     DCInvalidateRange(chunk->dispList, listSize);
-    
-    GX_BeginDispList(chunk->dispList, listSize); 
-    
+
+    GX_BeginDispList(chunk->dispList, listSize);
+
     GX_Begin(GX_QUADS, GX_VTXFMT1, 4 * facesListCount);
     for (int i = 0; i < facesListCount; i++)
     {
         struct Face *face = &facesList[i];
-        
+
         //add vertices for the face
         for (int j = 0; j < 4; j++)
         {
@@ -595,7 +609,7 @@ static void build_chunk_display_list(struct Chunk *chunk)
         }
     }
     GX_End();
-    
+
     chunk->dispListSize = GX_EndDispList();
     assert(chunk->dispListSize != 0);
     free(facesList);
@@ -624,13 +638,13 @@ void world_render_chunks_at(float x, float z)
 {
     int chunkX = world_to_chunk_coord(x);
     int chunkZ = world_to_chunk_coord(z);
-    
+
     GX_LoadTexObj(&blocksTexture, GX_TEXMAP0);
     GX_SetNumTevStages(1);
     GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);
     GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
     GX_SetTexCoordScaleManually(GX_TEXCOORD0, GX_TRUE, TEX_BLOCK_WIDTH, TEX_BLOCK_HEIGHT);
-    
+
     GX_ClearVtxDesc();
     GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
     GX_SetVtxDesc(GX_VA_CLR0, GX_INDEX8);
@@ -639,19 +653,19 @@ void world_render_chunks_at(float x, float z)
     GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_CLR0, GX_CLR_RGB, GX_RGB8, 0);
     GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_TEX0, GX_TEX_ST, GX_U16, 0);
     GX_SetArray(GX_VA_CLR0, lightLevels, 3 * sizeof(u8));
-    
+
     for (int i = -CHUNK_RENDER_RANGE / 2; i <= CHUNK_RENDER_RANGE / 2; i++)
     {
         for (int j = -CHUNK_RENDER_RANGE / 2; j <= CHUNK_RENDER_RANGE / 2; j++)
         {
             struct Chunk *chunk = world_get_chunk(chunkX + i, chunkZ + j);
-            
+
             if (chunk->dispList == NULL)
                 build_chunk_display_list(chunk);
             GX_CallDispList(chunk->dispList, chunk->dispListSize);
         }
     }
-    
+
     GX_SetNumTevStages(1);
 }
 
@@ -663,13 +677,13 @@ void world_init(void)
 {
     assert(gSaveFile.name != NULL);
     memset(chunkTable, 0, sizeof(chunkTable));
-    
+
     //Hash the seed string.
     worldSeed = 0;
     for (char *c = gSaveFile.seed; *c != '\0'; c++)
     {
         int shift = ((c - gSaveFile.seed) % sizeof(u16)) * CHAR_BIT;
-        
+
         worldSeed |= *c << shift;
     }
     file_log("world_init(): starting world. name = '%s', seed = '%s', spawn = (%i, %i, %i), modifiedChunksCount = %i",
@@ -686,7 +700,7 @@ void world_load_textures(void)
 }
 
 void world_close(void)
-{   
+{
     for (int i = 0; i < CHUNK_TABLE_WIDTH; i++)
     {
         for (int j = 0; j < CHUNK_TABLE_WIDTH; j++)

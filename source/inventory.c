@@ -9,23 +9,29 @@
 #include "item_icons_tpl.h"
 #include "item_icons.h"
 
-#define INVENTORY_TILE_WIDTH 64
-#define INVENTORY_TILE_HEIGHT 64
-#define ITEM_ICON_WIDTH 32
-#define ITEM_ICON_HEIGHT 32
+#define INVENTORY_TILE_WIDTH 32
+#define INVENTORY_TILE_HEIGHT 32
+#define ITEM_ICON_WIDTH 16
+#define ITEM_ICON_HEIGHT 16
 
 //Item icon IDs
 enum
 {
     ICON_STONE,
+	ICON_COBBLESTONE,
     ICON_SAND,
+	ICON_SANDSTONE,
     ICON_DIRT,
     ICON_GRASS,
     ICON_WOOD,
     ICON_TREE,
     ICON_LEAVES,
     ICON_WATER,
+	ICON_LAVA,
 	ICON_BEDROCK,
+	ICON_CLAY,
+	ICON_BRICKS,
+	ICON_CRAFT,
 };
 
 int inventorySelection;
@@ -35,20 +41,26 @@ static GXTexObj itemIconsTexture;
 static const u8 itemIconTable[] =
 {
     [BLOCK_STONE] = ICON_STONE,
+	[BLOCK_COBBLESTONE] = ICON_COBBLESTONE,
     [BLOCK_SAND] = ICON_SAND,
+	[BLOCK_SANDSTONE] = ICON_SANDSTONE,
     [BLOCK_DIRT] = ICON_DIRT,
     [BLOCK_GRASS] = ICON_GRASS,
     [BLOCK_WOOD] = ICON_WOOD,
     [BLOCK_TREE] = ICON_TREE,
     [BLOCK_LEAVES] = ICON_LEAVES,
     [BLOCK_WATER] = ICON_WATER,
+	[BLOCK_LAVA] =ICON_LAVA,
 	[BLOCK_BEDROCK] = ICON_BEDROCK,
+	[BLOCK_CLAY] = ICON_CLAY,
+	[BLOCK_BRICKS] = ICON_BRICKS,
+	[BLOCK_CRAFT] =ICON_CRAFT,
 };
 
 static int get_nonempty_slots_count(void)
 {
     int n = 0;
-    
+
     for (int i = 0; i < NUM_ITEM_SLOTS; i++)
     {
         if (gSaveFile.inventory[i].count > 0)
@@ -67,11 +79,11 @@ void inventory_draw(void)
     int selectionRectY = y;
     int iconOffsetX = (INVENTORY_TILE_WIDTH - ITEM_ICON_WIDTH) / 2;
     int iconOffsetY = (INVENTORY_TILE_HEIGHT - ITEM_ICON_HEIGHT) / 2;
-    
+
     //Draw background
     drawing_set_fill_color(20, 20, 20, 180);
     drawing_draw_solid_rect(x, y, width, height);
-    
+
     //Draw item icons
     GX_LoadTexObj(&itemIconsTexture, GX_TEXMAP0);
     GX_SetNumTevStages(1);
@@ -91,7 +103,7 @@ void inventory_draw(void)
             int icon = itemIconTable[gSaveFile.inventory[i].type];
             int iconX = x + i * INVENTORY_TILE_WIDTH + iconOffsetX;
             int iconY = y + iconOffsetY;
-            
+
             GX_Position2u16(iconX, iconY);
             GX_TexCoord2u16(icon, 0);
             GX_Position2u16(iconX + ITEM_ICON_WIDTH, iconY);
@@ -103,20 +115,20 @@ void inventory_draw(void)
         }
     }
     GX_End();
-    
+
     //Draw item quantities
-    text_set_font_size(16, 32);
+    text_set_font_size(8, 16);
     text_init();
     for (int i = 0; i < NUM_ITEM_SLOTS; i++)
     {
         if (gSaveFile.inventory[i].count > 0)
             text_draw_string_formatted(x + i * INVENTORY_TILE_WIDTH, y, 0, "%i", gSaveFile.inventory[i].count);
     }
-    
+
     //Draw selection rectangle
     drawing_set_fill_color(255, 255, 255, 255);
     drawing_draw_outline_rect(selectionRectX, selectionRectY, INVENTORY_TILE_WIDTH, INVENTORY_TILE_HEIGHT);
-    
+
 }
 
 void inventory_add_block(int type)
@@ -131,7 +143,7 @@ void inventory_add_block(int type)
             return;
         }
     }
-    
+
     //Check for an empty slot
     for (int i = 0; i < NUM_ITEM_SLOTS; i++)
     {

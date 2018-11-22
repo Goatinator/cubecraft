@@ -39,7 +39,7 @@ static struct Menu mainMenu = {
 };
 
 static char saveFiles[MAX_SAVE_FILES][SAVENAME_MAX];
-static char saveFileLabels[MAX_SAVE_FILES][SAVENAME_MAX + 3];  //+3 is for the 
+static char saveFileLabels[MAX_SAVE_FILES][SAVENAME_MAX + 3];  //+3 is for the
 static struct MenuItem filesMenuItems[MAX_SAVE_FILES + 1];
 static int fileNum;
 
@@ -97,7 +97,7 @@ static void draw_title_banner(void)
 {
     int x = (gDisplayWidth - TITLE_BANNER_WIDTH) / 2;
     int y = 100;
-    
+
     drawing_set_fill_texture(&titleTexture, TITLE_BANNER_WIDTH, TITLE_BANNER_HEIGHT);
     drawing_draw_textured_rect(x, y, TITLE_BANNER_WIDTH, TITLE_BANNER_HEIGHT);
 }
@@ -116,7 +116,7 @@ static void draw_title_background(void)
     Mtx posMtx;
     Mtx rotMtx;
     guVector axis;
-    
+
     drawing_set_3d_mode();
     guMtxIdentity(posMtx);
     axis = (guVector){0.0, 1.0, 0.0};
@@ -125,11 +125,11 @@ static void draw_title_background(void)
     guMtxConcat(rotMtx, posMtx, posMtx);
     GX_LoadPosMtxImm(posMtx, GX_PNMTX0);
     world_render_chunks_at(0, 0);
-    
+
     bkgndAngle += 0.05;
     if (bkgndAngle >= 360.0)
         bkgndAngle = 0.0;
-    
+
     drawing_set_2d_mode();
     draw_title_banner();
     draw_version_copyright();
@@ -316,7 +316,7 @@ static void newgame_menu_main(void)
                     menu_msgbox_init("You must enter a seed.");
                     break;
                 }
-                
+
                 world_close();
                 //Initialize player's starting position
                 gSaveFile.spawnX = 5;
@@ -358,7 +358,7 @@ static void newgame_menu_init(void)
 static void files_menu_main(void)
 {
     int item;
-    
+
     item = menu_process_input();
     if (item == MENU_NORESULT)
         return;
@@ -408,7 +408,7 @@ static void files_menu_init(void)
 {
     for (int i = 0; i < MAX_SAVE_FILES; i++)
         sprintf(saveFileLabels[i], "asdkjfgh");
-    
+
     //Populate file menu
     fileNum = 0;
     file_enumerate(enum_files_callback);
@@ -509,7 +509,7 @@ void title_screen_init(void)
     strcpy(gSaveFile.seed, "12345");
     gSaveFile.modifiedChunks = NULL;
     gSaveFile.modifiedChunksCount = 0;
-    
+
     if (file_get_error() != NULL)
         menu_msgbox_init(file_get_error());
     world_init();
