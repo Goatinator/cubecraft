@@ -8,18 +8,45 @@ enum
 {
 	BLOCK_AIR,
 	BLOCK_STONE,
+	BLOCK_COBBLESTONE,
 	BLOCK_SAND,
+	BLOCK_SANDSTONE,
 	BLOCK_DIRT,
 	BLOCK_GRASS,
 	BLOCK_WOOD,
     BLOCK_TREE,
     BLOCK_LEAVES,
     BLOCK_WATER,
+    BLOCK_LAVA,
 	BLOCK_BEDROCK,
+	BLOCK_CLAY,
+	BLOCK_BRICKS,
+	BLOCK_CRAFT,
 };
 
-#define BLOCK_IS_SOLID(b)   ((b) != BLOCK_AIR && (b) != BLOCK_WATER)
-//&& (b) != BLOCK_WATER
+static char *blockNames[]=
+{
+	"Air",
+    "Stone",
+    "Cobblestone",
+    "Sand",
+    "Sandstone",
+    "Dirt",
+    "Grass Block",
+    "Wood Planks",
+    "Wood",
+    "Leaves",
+    "Water",
+    "Lava",
+    "Bedrock",
+    "Clay",
+    "Bricks",
+    "Crafting Table",
+};
+
+#define BLOCK_IS_SOLID(b)   ((b) != BLOCK_AIR && (b) != BLOCK_WATER && (b) != BLOCK_LAVA)
+#define BLOCK_IS_LIQUID(b)  ((b) != BLOCK_AIR)
+
 struct Chunk
 {
     bool active;
